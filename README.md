@@ -1,6 +1,8 @@
 # desafio-backend-05-pdv
 ![](https://i.imgur.com/xG74tOh.png)
 
+**Grupo: Ruan Brito, Álvaro Batista, Débora Santos, Matheus Andrade, Luide Jesus**
+
 # Desafio Módulo 5 - Backend
 
 Seja bem vindo(a) ao desafio do módulo 5.
