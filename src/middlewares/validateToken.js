@@ -2,7 +2,7 @@ require('dotenv').config()
 const jwt = require('jsonwebtoken')
 const knex = require('../database/connection')
 
-const validacaoToken = async (req, res, next) => {
+const validateToken = async (req, res, next) => {
     const { authorization } = req.headers;
     if (!authorization) {
         return res.status(401).json({ mensagem: 'Para acessar este recurso um token de autenticação válido deve ser enviado.' })
@@ -18,8 +18,8 @@ const validacaoToken = async (req, res, next) => {
         if (generatorTokenCount === 0) {
             return res.status(404).json({ mensagem: 'Usuário não existe' })
         }
-        const { senha: _, ...usuario } = generatorToken
-        req.usuario = usuario
+        const { password: _, ...user } = generatorToken
+        req.user = user
         return next();
     } catch (error) {
         return res.status(401).json({ mensagem: 'Para acessar este recurso um token de autenticação válido deve ser enviado.' })
@@ -27,5 +27,5 @@ const validacaoToken = async (req, res, next) => {
 }
 
 module.exports = {
-    validacaoToken
+    validateToken
 }
