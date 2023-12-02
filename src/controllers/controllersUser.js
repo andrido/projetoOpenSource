@@ -33,10 +33,6 @@ const login = async (req, res) => {
 
     const { email, password } = req.body
 
-    if (!email || !password) {
-        return res.status(400).json({ mensagem: "Todos os campos sao obrigatórios" })
-    }
-
     try {
         const ExistentUser = await knex('usuarios').where({ email: email }).returning('*')
         if (ExistentUser.length === 0) {
