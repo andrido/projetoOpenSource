@@ -7,10 +7,8 @@ const registerUser = async (req, res) => {
     const { name, email, password } = req.body
 
     try {
-
         const passwordEncrypted = await bcrypt.hash(password, 10)
         const validateEmail = await knex('usuarios').select('*').where({ email })
-
 
         if (validateEmail[0]?.email) {
             return res.status(400).json({ mensagem: 'Já existe usuário cadastrado com o e-mail informado.' });
@@ -24,13 +22,11 @@ const registerUser = async (req, res) => {
 
         return res.status(201).json(register)
     } catch (error) {
-
         return res.status(500).json({ message: error.message })
     }
 }
 
 const login = async (req, res) => {
-
     const { email, password } = req.body
 
     try {
@@ -39,32 +35,38 @@ const login = async (req, res) => {
             return res.status(400).json({ mensagem: "E-mail ou senha inválida" })
         }
 
-        const { senha: senhaUsuario, ...usuario } = ExistentUser[0]
+        const { senha: passwordUser, ...user } = ExistentUser[0]
 
-        console.log(usuario)
-        const senhaCorreta = await bcrypt.compare(password, senhaUsuario)
+        const correctPassword = await bcrypt.compare(password, passwordUser)
 
-        if (!senhaCorreta) {
+        if (!correctPassword) {
             return res.status(400).json({ mensagem: "E-mail ou senha inválida" })
         }
 
-
-        const token = jwt.sign({ id: usuario.id }, process.env.JWT_PASS, { expiresIn: '8h' })
+        const token = jwt.sign({ sub: user.id }, process.env.JWT_PASS, { expiresIn: '8h' })
         return res.json({
-            usuario,
+            user,
             token
         })
 
     } catch (error) {
-
         return res.status(500).json(error.mensage)
-
     }
 }
 
+const userDetails = async (req, res) => {
+    const { id } = req.user
+    try {
+        const queryDataBase = await knex('usuarios').select(['id', 'nome', 'email']).where({ id }).first()
+        return res.json(queryDataBase)
+        
+    } catch (error) {
+        return res.status(500).json(error.mensage)
+    }
+}
 
 module.exports = {
     registerUser,
-    login
-
+    login,
+    userDetails
 }
