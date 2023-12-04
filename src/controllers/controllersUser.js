@@ -71,9 +71,10 @@ const editUser = async (req, res) => {
 
     try {
         const passwordEncrypted = await bcrypt.hash(password, 10)
-        const validateEmail = await knex('usuarios').select('*').where({ email })
-        
-        if (validateEmail[0]?.email) {
+        const validateEmail = await knex('usuarios').select('*').where({ email }).first()
+        console.log(validateEmail);
+
+        if (validateEmail) {
             return res.status(400).json({ mensagem: 'Já existe usuário cadastrado com o e-mail informado.' });
         }
 

@@ -4,7 +4,7 @@ const { registerUser, login, userDetails, editUser} = require('../controllers/co
 const { middlewareRegisterUser } = require('../middlewares/middlewareUser');
 const schemaUser = require('../schemas/schemaUser');
 const schemaLogin = require('../schemas/schemaLogin');
-const { validateToken } = require('../middlewares/validateToken');
+const validateToken  = require('../middlewares/validateToken');
 
 
 routesUser.post('/usuario', middlewareRegisterUser(schemaUser), registerUser);

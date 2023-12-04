@@ -1,8 +1,8 @@
 require('dotenv').config()
 const jwt = require('jsonwebtoken')
-const knex = require('../database/connection')
 
-const validateToken = async (req, res, next) => {
+
+module.exports  = async (req, res, next) => {
     const { authorization } = req.headers
 
     if(!authorization){
@@ -22,6 +22,3 @@ const validateToken = async (req, res, next) => {
     }
 }
 
-module.exports = {
-    validateToken
-}
