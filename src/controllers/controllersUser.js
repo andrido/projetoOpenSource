@@ -65,8 +65,29 @@ const userDetails = async (req, res) => {
     }
 }
 
+const editUser = async (req, res) => {
+    const { id } = req.user
+    const { name, email, password } = req.body
+
+    try {
+        const passwordEncrypted = await bcrypt.hash(password, 10)
+        const validateEmail = await knex('usuarios').select('*').where({ email })
+        
+        if (validateEmail[0]?.email) {
+            return res.status(400).json({ mensagem: 'Já existe usuário cadastrado com o e-mail informado.' });
+        }
+
+        const updateUser = await knex('usuarios').where({id}).update({nome:name, email:email, senha: passwordEncrypted})
+
+        return res.status(201).json(updateUser)
+    } catch (error) {
+        return res.status(500).json(error.mensage)
+    }
+}
+
 module.exports = {
     registerUser,
     login,
-    userDetails
+    userDetails,
+    editUser
 }
