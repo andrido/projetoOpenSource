@@ -4,10 +4,10 @@ const jwt = require('jsonwebtoken')
 
 
 const registerUser = async (req, res) => {
-    const { name, email, password } = req.body
+    const { nome, email, senha } = req.body
 
     try {
-        const passwordEncrypted = await bcrypt.hash(password, 10)
+        const passwordEncrypted = await bcrypt.hash(senha, 10)
         const validateEmail = await knex('usuarios').select('*').where({ email })
 
         if (validateEmail[0]?.email) {
@@ -15,10 +15,10 @@ const registerUser = async (req, res) => {
         }
 
         const register = await knex('usuarios').insert({
-            nome: name,
+            nome,
             email,
             senha: passwordEncrypted,
-        }).returning('*')
+        }).returning('nome', 'email')
 
         return res.status(201).json(register)
     } catch (error) {
@@ -44,7 +44,7 @@ const login = async (req, res) => {
         }
 
         const token = jwt.sign({ sub: user.id }, process.env.JWT_PASS, { expiresIn: '8h' })
-        return res.json({
+        return res.status(200).json({
             user,
             token
         })
@@ -59,7 +59,7 @@ const userDetails = async (req, res) => {
     try {
         const queryDataBase = await knex('usuarios').select(['id', 'nome', 'email']).where({ id }).first()
         return res.json(queryDataBase)
-        
+
     } catch (error) {
         return res.status(500).json(error.mensage)
     }
@@ -67,10 +67,10 @@ const userDetails = async (req, res) => {
 
 const editUser = async (req, res) => {
     const { id } = req.user
-    const { name, email, password } = req.body
+    const { nome, email, senha } = req.body
 
     try {
-        const passwordEncrypted = await bcrypt.hash(password, 10)
+        const passwordEncrypted = await bcrypt.hash(senha, 10)
         const validateEmail = await knex('usuarios').select('*').where({ email }).first()
         console.log(validateEmail);
 
@@ -78,7 +78,7 @@ const editUser = async (req, res) => {
             return res.status(400).json({ mensagem: 'Já existe usuário cadastrado com o e-mail informado.' });
         }
 
-        const updateUser = await knex('usuarios').where({id}).update({nome:name, email:email, senha: passwordEncrypted})
+        const updateUser = await knex('usuarios').where({ id }).update({ nome, email: email, senha: passwordEncrypted })
 
         return res.status(201).json(updateUser)
     } catch (error) {
