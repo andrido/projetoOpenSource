@@ -2,10 +2,10 @@ require('dotenv').config()
 const jwt = require('jsonwebtoken')
 
 
-module.exports  = async (req, res, next) => {
+const validateToken = async (req, res, next) => {
     const { authorization } = req.headers
 
-    if(!authorization){
+    if (!authorization) {
         return res.status(401).json({ mensagem: 'Para acessar este recurso um token de autenticação válido deve ser enviado.' })
     }
 
@@ -16,9 +16,10 @@ module.exports  = async (req, res, next) => {
 
         req.user = { id: sub }
 
-    next()
+        next()
     } catch (error) {
         return res.status(401).json({ mensagem: 'Para acessar este recurso um token de autenticação válido deve ser enviado.' })
     }
 }
 
+module.exports = { validateToken }
