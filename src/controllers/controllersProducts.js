@@ -1,0 +1,37 @@
+const knex = require('../database/connection');
+const productRegister = async (req, res) => {
+
+    const { descricao, quantidade_estoque, valor, categoria_id } = req.body
+
+
+
+    try {
+
+        const productRepetition = await knex('produtos').where({ descricao: descricao }).returning('*')
+        if (productRepetition.length !== 0) {
+            return res.status(404).json({ message: `O produto ${descricao} já existe no registro` })
+        }
+
+        const existentCategory = await knex('categorias').where({ id: categoria_id }).returning('*')
+        if (existentCategory.length !== 1) {
+            return res.status(404).json({ message: `Não foi possível encontrar categoria com o ID:${id}` })
+        }
+
+        const product = await knex('produtos').insert({
+            descricao,
+            quantidade_estoque,
+            valor,
+            categoria_id
+        }).returning('*')
+
+        return res.status(201).json(product[0])
+
+    } catch (error) {
+
+        return res.status(500).json({ message: error.message })
+    }
+
+}
+
+
+module.exports = { productRegister }
