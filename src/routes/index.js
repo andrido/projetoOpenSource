@@ -6,12 +6,14 @@ const { middlewareRegisterUser } = require('../middlewares/middlewareUser');
 const { listCategories } = require('../controllers/controllerscategories');
 
 
+
 const schemaProduct = require('../schemas/schemaProducts');
 const schemaUser = require('../schemas/schemaUser');
 const schemaLogin = require('../schemas/schemaLogin');
 
 const { validateToken } = require('../middlewares/validateToken');
 const { productRegister } = require('../controllers/controllersProducts');
+
 
 route.get('/categoria', listCategories);
 route.post('/usuario', middlewareRegisterUser(schemaUser), registerUser);
@@ -21,7 +23,9 @@ route.use(validateToken)
 
 route.put('/usuario', middlewareRegisterUser(schemaUser), editUser)
 route.get('/usuario', userDetails)
+
 route.post('/produto', middlewareRegisterUser(schemaProduct), productRegister)
+
 
 
 module.exports = route;
