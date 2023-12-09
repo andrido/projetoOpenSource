@@ -83,7 +83,7 @@ const detailProduct = async (req, res) => {
         const product = await knex('produtos').where({ id }).first();
 
         if (!product) {
-            return res.status(400).json({ message: 'Produto com id ${id} não encontrado' })
+            return res.status(400).json({ message: `Produto com id ${id} não encontrado` })
         }
 
         res.status(200).json(product)
@@ -93,11 +93,32 @@ const detailProduct = async (req, res) => {
 
 }
 
+const deleteProduct = async (req,res) => {
+    const { id } = req.params
+
+    try {
+        const product = await knex('produtos').where({id}).first()
+
+        if (!product) {
+            return res.status(400).json({ message: `Produto com id ${id} não encontrado` })
+        }
+
+        const removeProduct = await knex('produtos').where({id}).delete()
+
+        return res.status(200).json({message: 'Produto excluido!'})
+
+    } catch (error) {
+        return res.status(500).json({ message: 'Erro interno no servidor' });
+    }
+}
+
 
 
 module.exports = {
     productRegister,
     productListing,
     detailProduct,
+    deleteProduct,
     editProduct
+
 }
