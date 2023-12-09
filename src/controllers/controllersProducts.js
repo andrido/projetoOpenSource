@@ -30,6 +30,35 @@ const productRegister = async (req, res) => {
     }
 }
 
+const editProduct = async (req,res)=>{
+    
+const {id} = req.params
+const { descricao, quantidade_estoque, valor, categoria_id } = req.body
+
+ try {
+
+    const validateID = await knex('produtos').where({ id })
+
+
+    if (validateID.length === 0) {
+        return res.status(400).json({message:`O ID: ${id} não existe`})
+    }
+
+    const existentCategory = await knex('categorias').where({ id: categoria_id }).returning('*')
+
+        if (existentCategory.length === 0) {
+            return res.status(404).json({ message: `Não foi possível encontrar categoria com esse ID` })
+        }
+
+    const queryEdit = await knex('produtos').update({ descricao, quantidade_estoque, valor, categoria_id }).where({ id }).returning('*')
+
+    return res.status(200).json(queryEdit[0])
+
+ } catch (error) {
+    
+ }
+}
+
 const productListing = async (req, res) => {
     try {
         const queryListing = await knex('produtos').returning('*')
@@ -68,5 +97,6 @@ const detailProduct = async (req, res) => {
 module.exports = {
     productRegister,
     productListing,
-    detailProduct
+    detailProduct,
+    editProduct
 }
