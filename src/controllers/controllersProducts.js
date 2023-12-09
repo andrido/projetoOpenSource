@@ -61,15 +61,35 @@ const { descricao, quantidade_estoque, valor, categoria_id } = req.body
 }
 
 const productListing = async (req, res) => {
+    const { filtro } = req.query;
     try {
         const queryListing = await knex('produtos').returning('*')
 
-        if (queryListing.length !== 0) {
-            return res.status(400).json({ message: 'Nenhum produto encontrado!' })
+        if(queryListing.length === 0) {
+            return res.status(404).json({ message: 'Nenhum produto encontrado!' })
         }
+        
+        const queryCategories = await knex('produtos as p').select('p.id', 'p.descricao', 'p.quantidade_estoque', 'p.valor', 
+        'p.categoria_id', 'c.descricao as categoria_descricao').
+        innerJoin('categorias as c', 'c.id', 'p.categoria_id').orderBy('id');
 
-        return res.status(200).json(queryListing)
-    } catch (error) {
+        if(filtro) {
+            const filterCategories = queryCategories.filter((el) => { 
+                const existentCategory = filtro.includes(String(el.categoria_id))
+                if (existentCategory) {
+                    return el;
+                }
+            })
+            
+            if(filterCategories.length === 0) {
+                return res.status(404).json({ message: 'Nenhum produto encontrado!' })
+            }
+
+            return res.status(200).json(filterCategories)
+        }
+        return res.status(200).json(queryCategories)
+
+        } catch (error) {
         return res.status(500).json({ message: error.message })
     }
 }
@@ -113,12 +133,10 @@ const deleteProduct = async (req,res) => {
 }
 
 
-
 module.exports = {
     productRegister,
     productListing,
     detailProduct,
     deleteProduct,
     editProduct
-
 }
