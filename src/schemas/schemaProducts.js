@@ -19,7 +19,7 @@ const schemaProduct = joi.object({
     }),
     categoria_id: joi.number().positive().required().messages({
         'any.required': 'O campo categoria_id é obrigatório',
-        'number.base': 'O campo valor deverá ser um número'
+        'number.base': 'O campo valor deverá ser um número',
     })
 });
 
