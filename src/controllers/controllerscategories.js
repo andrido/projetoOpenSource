@@ -8,7 +8,7 @@ const listCategories = async (req, res) => {
     try {
         if (id) {
             const categories = await knex('categorias').where({ id }).select('*')
-            const resposta = categories.length !== 0 ? res.status(200).json(categories) :
+            const resposta = categories.length !== 0 ? res.status(200).json(categories[0]) :
                 res.status(404).json({ message: `Categoria com ID: ${id} não encontrada` })
             return resposta
         }
