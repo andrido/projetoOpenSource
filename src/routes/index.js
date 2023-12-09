@@ -13,7 +13,7 @@ const schemaLogin = require('../schemas/schemaLogin');
 
 const { validateToken } = require('../middlewares/validateToken');
 
-const { productRegister, detailProduct, deleteProduct, editProduct } = require('../controllers/controllersProducts');
+const { productRegister, detailProduct, deleteProduct, editProduct, productListing } = require('../controllers/controllersProducts');
 
 
 route.get('/categoria', listCategories);
@@ -27,7 +27,7 @@ route.get('/usuario', userDetails)
 
 route.post('/produto', middlewareRegisterUser(schemaProduct), productRegister)
 route.get('/produto/:id', detailProduct)
-
+route.get('/produto', productListing)
 route.delete('/produto/:id', deleteProduct)
 route.put('/produto/:id',middlewareRegisterUser(schemaProduct), editProduct)
 
