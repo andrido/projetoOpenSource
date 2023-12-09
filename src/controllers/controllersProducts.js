@@ -31,7 +31,7 @@ const productRegister = async (req, res) => {
 }
 
 const editProduct = async (req,res)=>{
-    
+
 const {id} = req.params
 const { descricao, quantidade_estoque, valor, categoria_id } = req.body
 
@@ -55,6 +55,7 @@ const { descricao, quantidade_estoque, valor, categoria_id } = req.body
     return res.status(200).json(queryEdit[0])
 
  } catch (error) {
+        return res.status(500).json({ message: error.message })
     
  }
 }
