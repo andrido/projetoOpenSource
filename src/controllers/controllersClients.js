@@ -60,10 +60,6 @@ const clientEdit = async (req, res) => {
           return res.status(400).json({ message: `O ID: ${id} não existe` })
       }
 
-      if (!nome || !email || !cpf) {
-        return res.status(400).json({ message: 'Os campos são obrigatórios' });
-      }
-
       const queryEmail = await knex('clientes').select('*').where({ email }).first()
       if (queryEmail) {
           return res.status(400).json({ message: 'Já existe usuário cadastrado com o e-mail informado.' }) 
