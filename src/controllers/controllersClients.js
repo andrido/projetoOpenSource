@@ -50,8 +50,37 @@ const clientDetail = async (req, res) => {
     }
 }
 
-const clientEdit = (req, res) => {
+const clientEdit = async (req, res) => {
+    const { id } = req.params
+    const {nome, email, cpf} = req.body
 
+    try {
+      const validateID = await knex('clientes').where({ id })
+      if (validateID.length === 0) {
+          return res.status(400).json({ message: `O ID: ${id} não existe` })
+      }
+
+      if (!nome || !email || !cpf) {
+        return res.status(400).json({ message: 'Os campos são obrigatórios' });
+      }
+
+      const queryEmail = await knex('clientes').select('*').where({ email }).first()
+      if (queryEmail) {
+          return res.status(400).json({ message: 'Já existe usuário cadastrado com o e-mail informado.' }) 
+      }
+
+      const queryCPF = await knex('clientes').where({ cpf }).first()
+      if (queryCPF) {
+        return res.status(400).json({ message: 'Já existe usuário cadastrado com o CPF informado.' }) 
+      }
+
+      const updateUser = await knex('clientes').where({ id }).update({nome,email,cpf})
+
+      return res.status(200).json({ message: "Cliente atualizado" })
+      
+    } catch (error) {
+      return res.status(500).json({ message: 'Erro interno do servidor' })
+    }
 }
 
 const clientDelete = (req, res) => {
