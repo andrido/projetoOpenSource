@@ -10,11 +10,12 @@ const { listCategories } = require('../controllers/controllerscategories');
 const schemaProduct = require('../schemas/schemaProducts');
 const schemaUser = require('../schemas/schemaUser');
 const schemaLogin = require('../schemas/schemaLogin');
+const schemaClients = require('../schemas/schemaClients');
 
 const { validateToken } = require('../middlewares/validateToken');
 
 const { productRegister, detailProduct, deleteProduct, editProduct, productListing } = require('../controllers/controllersProducts');
-const { clientList } = require('../controllers/controllersClients');
+const { clientList, clientRegister } = require('../controllers/controllersClients');
 
 
 route.get('/categoria', listCategories);
@@ -31,6 +32,8 @@ route.get('/produto/:id', detailProduct)
 route.get('/produto', productListing)
 route.delete('/produto/:id', deleteProduct)
 route.put('/produto/:id', middlewareRegisterUser(schemaProduct), editProduct)
+
 route.get('/cliente', clientList)
+route.post('/cliente', middlewareRegisterUser(schemaClients), clientRegister)
 
 module.exports = route;
