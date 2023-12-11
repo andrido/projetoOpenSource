@@ -15,7 +15,7 @@ const schemaClients = require('../schemas/schemaClients');
 const { validateToken } = require('../middlewares/validateToken');
 
 const { productRegister, detailProduct, deleteProduct, editProduct, productListing } = require('../controllers/controllersProducts');
-const { clientList, clientRegister } = require('../controllers/controllersClients');
+const { clientList, clientRegister, clientDetail } = require('../controllers/controllersClients');
 
 
 route.get('/categoria', listCategories);
@@ -34,6 +34,7 @@ route.delete('/produto/:id', deleteProduct)
 route.put('/produto/:id', middlewareRegisterUser(schemaProduct), editProduct)
 
 route.get('/cliente', clientList)
+route.get('/cliente/:id', clientDetail)
 route.post('/cliente', middlewareRegisterUser(schemaClients), clientRegister)
 
 module.exports = route;
