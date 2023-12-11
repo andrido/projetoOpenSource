@@ -37,13 +37,13 @@ const clientDetail = async (req, res) => {
 
     try {
 
-      const queryClient = await knex('clientes').where({id}).first()
+      const queryClient = await knex('clientes').where({id})
 
       if (queryClient.length === 0) {
         return res.status(400).json({ message: `O ID de cliente: ${id} não existe` })
       }
 
-      return res.status(200).json(queryClient)
+      return res.status(200).json(queryClient[0])
       
     } catch (error) {
       return res.status(500).json({ message: 'Erro interno do servidor' })
@@ -52,7 +52,7 @@ const clientDetail = async (req, res) => {
 
 const clientEdit = async (req, res) => {
     const { id } = req.params
-    const {nome, email, cpf} = req.body
+    const {nome, email, cpf, cep, rua, numero, bairro, cidade, estado } = req.body
 
     try {
       const validateID = await knex('clientes').where({ id })
@@ -74,23 +74,19 @@ const clientEdit = async (req, res) => {
         return res.status(400).json({ message: 'Já existe usuário cadastrado com o CPF informado.' }) 
       }
 
-      const updateUser = await knex('clientes').where({ id }).update({nome,email,cpf})
+      const updateUser = await knex('clientes').where({ id }).update({nome, email, cpf, cep, rua, numero, bairro, cidade, estado }).returning('*')
 
-      return res.status(200).json({ message: "Cliente atualizado" })
+      return res.status(200).json(updateUser[0])
       
     } catch (error) {
       return res.status(500).json({ message: 'Erro interno do servidor' })
     }
 }
 
-const clientDelete = (req, res) => {
-
-}
 
 module.exports = {
     clientRegister,
     clientList,
     clientDetail,
-    clientEdit,
-    clientDelete
+    clientEdit
 }
