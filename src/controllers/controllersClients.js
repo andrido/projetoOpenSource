@@ -24,7 +24,7 @@ const clientRegister = async (req, res) => {
 
 const clientList = async (req, res) => {
     try {
-      const list = await knex('clientes').returning('*')
+      const list = await knex('clientes').returning('*').orderBy('id', 'asc')
       return res.status(200).json(list)
 
     } catch (error) {
