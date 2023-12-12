@@ -1,5 +1,4 @@
 const knex = require('../database/connection');
-const { id } = require('../schemas/schemaUser');
 
 const listCategories = async (req, res) => {
 
