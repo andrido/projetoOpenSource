@@ -1,45 +1,56 @@
 const joi = require('joi');
 
 const schemaClients = joi.object({
-    nome: joi.string().required().messages({
+    nome: joi.string().regex(/^\w+$/).required().messages({
         'any.required': 'O campo nome é obrigatório',
         'string.empty': 'O campo nome é obrigatório',
         'string.base': 'O campo nome precisa ser do tipo string',
-        'string.trim': 'O campo nome não pode ter espaço em branco'
+        'string.pattern.base': 'O campo nome não pode ter espaço em branco'
     }),
     email: joi.string().email().required().messages({
         'any.required': 'O campo email é obrigatório',
-        'string.email': 'O campo email tem que estar num formato válido',
         'string.empty': 'O campo email é obrigatório',
+        'string.email': 'O campo email tem que estar num formato válido',
         'string.base': 'O campo email precisa ser do tipo string',
-        'string.trim': 'O campo email não pode ter espaço em branco'
     }),
-    cpf: joi.string().min(11).required().messages({
-        'string.min': 'O campo cpf tem que ter no mínimo 11 caracteres',
+    cpf: joi.string().regex(/^[0-9]+$/).min(11).max(11).required().messages({
+        'string.min': 'O campo cpf tem que ter 11 caracteres',
+        'string.max': 'O campo cpf tem que ter 11 caracteres',
         'any.required': 'O campo cpf é obrigatório',
-        'string.empty': 'O campo cpf não pode ser nulo',
+        'string.empty': 'O campo cpf é obrigatório',
         'string.base': 'O campo cpf precisa ser do tipo string',
-        'string.trim': 'O campo cpf não pode ter espaço em branco'
+        'string.pattern.base': 'O campo cpf só pode conter números inteiros'
     }),
-    cep: joi.string().min(8).messages({
-      'string.min': 'O campo cep tem que ter no mínimo 8 caracteres',
+    cep: joi.string().regex(/^[0-9]+$/).min(8).max(8).messages({
+      'string.min': 'O campo cep tem que ter 8 caracteres',
+      'string.max': 'O campo cep tem que ter 8 caracteres',
       'string.base': 'O campo cep precisa ser do tipo string',
+      'string.pattern.base': 'O campo cep só pode conter números inteiros'  
     }),
-    rua: joi.string().messages({
+    rua: joi.string().min(1).messages({
+      'string.min': 'O campo rua tem que ter no mínimo 1 caractere',
       'string.base': 'O campo rua precisa ser do tipo string',
+      'string.empty': 'O campo rua não pode está vazio',
     }),
     numero: joi.string().min(1).messages({
       'string.base': 'O campo número precisa ser do tipo string',
-      'string.min': 'O campo cep tem que ter no mínimo 1 caracteres'
+      'string.min': 'O campo número tem que ter no mínimo 1 caractere',
+      'string.empty': 'O campo número não pode está vazio',
     }),
-    bairro: joi.string().messages({
+    bairro: joi.string().min(1).messages({
+      'string.min': 'O campo bairro tem que ter no mínimo 1 caractere',
       'string.base': 'O campo bairro precisa ser do tipo string',
+      'string.empty': 'O campo bairro não pode está vazio',
     }),
-    cidade: joi.string().messages({
+    cidade: joi.string().min(1).messages({
+      'string.min': 'O campo cidade tem que ter no mínimo 1 caractere',
       'string.base': 'O campo cidade precisa ser do tipo string',
+      'string.empty': 'O campo cidade não pode está vazio',
     }),
-    estado: joi.string().messages({
+    estado: joi.string().min(1).messages({
+      'string.min': 'O campo estado tem que ter no mínimo 1 caractere',
       'string.base': 'O campo estado precisa ser do tipo string',
+      'string.empty': 'O campo estado não pode está vazio',
     })
 });
 
