@@ -15,7 +15,7 @@ const clientRegister = async (req, res) => {
     .insert({ nome, email, cpf, cep, rua, numero, bairro, cidade, estado })
     .returning('*')
 
-    return res.status(201).json(register)
+    return res.status(201).json(register[0])
 
   } catch (error) {
     return res.status(500).json({ message: error.message })
@@ -24,7 +24,7 @@ const clientRegister = async (req, res) => {
 
 const clientList = async (req, res) => {
     try {
-      const list = await knex('clientes').returning('*').orderBy('id', 'asc')
+      const list = await knex('clientes').orderBy('id', 'asc')
       return res.status(200).json(list)
 
     } catch (error) {
@@ -37,13 +37,13 @@ const clientDetail = async (req, res) => {
 
     try {
 
-      const queryClient = await knex('clientes').where({id})
+      const queryClient = await knex('clientes').where({id}).first()
 
-      if (queryClient.length === 0) {
+      if (!queryClient) {
         return res.status(400).json({ message: `O ID de cliente: ${id} não existe` })
       }
 
-      return res.status(200).json(queryClient[0])
+      return res.status(200).json(queryClient)
       
     } catch (error) {
       return res.status(500).json({ message: 'Erro interno do servidor' })
