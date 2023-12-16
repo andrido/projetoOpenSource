@@ -4,6 +4,7 @@ const route = express()
 const { registerUser, login, userDetails, editUser } = require('../controllers/controllersUser');
 const { middlewareRegisterUser } = require('../middlewares/middlewareUser');
 const { listCategories } = require('../controllers/controllerscategories');
+const { orderRegister } = require('../controllers/controllersOrders');
 
 
 
@@ -11,6 +12,7 @@ const schemaProduct = require('../schemas/schemaProducts');
 const schemaUser = require('../schemas/schemaUser');
 const schemaLogin = require('../schemas/schemaLogin');
 const schemaClients = require('../schemas/schemaClients');
+const schemaOrder = require('../schemas/schemaOrder');
 
 const { validateToken } = require('../middlewares/validateToken');
 
@@ -36,6 +38,7 @@ route.put('/produto/:id', middlewareRegisterUser(schemaProduct), editProduct)
 route.get('/cliente', clientList)
 route.get('/cliente/:id', clientDetail)
 route.post('/cliente', middlewareRegisterUser(schemaClients), clientRegister)
-route.put('/cliente/:id', middlewareRegisterUser(schemaClients),clientEdit)
+route.put('/cliente/:id', middlewareRegisterUser(schemaClients), clientEdit)
 
+route.post('/pedido', middlewareRegisterUser(schemaOrder), orderRegister)
 module.exports = route;
