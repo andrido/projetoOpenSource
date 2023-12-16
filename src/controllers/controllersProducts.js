@@ -13,7 +13,7 @@ const productRegister = async (req, res) => {
         const existentCategory = await knex('categorias').where({ id: categoria_id }).returning('*')
 
         if (existentCategory.length !== 1) {
-            return res.status(404).json({ message: `Não foi possível encontrar categoria com o ID:${id}` })
+            return res.status(404).json({ message: `Não foi possível encontrar categoria com o ID:${categoria_id}` })
         }
 
         const product = await knex('produtos').insert({
