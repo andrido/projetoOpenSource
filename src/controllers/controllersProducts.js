@@ -1,10 +1,43 @@
 const knex = require('../database/connection');
+const aws = require('aws-sdk')
+
+const endpoint = new aws.Endpoint(process.env.ENDPOINT)
+
+const s3 = new aws.S3({
+    endpoint,
+    credentials:{
+        accessKeyId:process.env.KEY_ID,
+        secretAccessKey:process.env.APP_KEY,
+
+    },
+})
 
 const productRegister = async (req, res) => {
     const { descricao, quantidade_estoque, valor, categoria_id } = req.body
+    const { file } = req
 
     try {
-        const productRepetition = await knex('produtos').where({ descricao: descricao }).returning('*')
+
+        if(file){
+            const uploadFile = await s3.upload({
+                Bucket: process.env.BACKBLAZE_BUCKET,
+                Key: `imagens/${file.originalname}`,
+                Body: file.buffer,
+                ContentType: file.mimetype
+            }).promise()
+            
+            const queryInsertProduct = await knex('produtos').insert({ 
+                descricao, 
+                quantidade_estoque, 
+                valor, 
+                categoria_id,
+                produto_imagem:uploadFile.Location
+                
+            }).returning('*')
+            return res.status(200).json(queryInsertProduct[0])
+
+        }
+        const productRepetition = await knex('produtos').where({ descricao }).returning('*')
 
         if (productRepetition.length !== 0) {
             return res.status(404).json({ message: `O produto ${descricao} já existe no registro` })
@@ -16,16 +49,20 @@ const productRegister = async (req, res) => {
             return res.status(404).json({ message: `Não foi possível encontrar categoria com o ID:${categoria_id}` })
         }
 
+
         const product = await knex('produtos').insert({
             descricao,
             quantidade_estoque,
             valor,
-            categoria_id
+            categoria_id,
+            
         }).returning('*')
 
+        console.log(req.file);
         return res.status(201).json(product[0])
 
     } catch (error) {
+        console.log(error);
         return res.status(500).json({ message: error.message })
     }
 }
@@ -34,23 +71,62 @@ const editProduct = async (req, res) => {
 
     const { id } = req.params
     const { descricao, quantidade_estoque, valor, categoria_id } = req.body
+    const { file } = req
+
 
     try {
 
+        
         const validateID = await knex('produtos').where({ id })
-
-
-        if (validateID.length === 0) {
+        
+        
+        if (!validateID) {
             return res.status(400).json({ message: `O ID: ${id} não existe` })
         }
-
+        
         const existentCategory = await knex('categorias').where({ id: categoria_id }).returning('*')
-
-        if (existentCategory.length === 0) {
+        
+        if (!existentCategory) {
             return res.status(404).json({ message: `Não foi possível encontrar categoria com esse ID` })
         }
 
-        const queryEdit = await knex('produtos').update({ descricao, quantidade_estoque, valor, categoria_id }).where({ id }).returning('*')
+        if(file){
+            
+            const deleteImage = await knex('produtos').select('produto_imagem').where({id})
+            
+            const editKey = deleteImage[0].produto_imagem.split('/')[5]
+            await s3.deleteObject({
+                Bucket: process.env.BACKBLAZE_BUCKET,
+                Key: `imagens/${editKey}`
+            })
+            
+            const uploadFile = await s3.upload({
+                Bucket: process.env.BACKBLAZE_BUCKET,
+                Key: `imagens/${file.originalname}`,
+                Body: file.buffer,
+                ContentType: file.mimetype
+            }).promise()
+            
+            const queryEditProduct = await knex('produtos').update({ 
+                descricao, 
+                quantidade_estoque, 
+                valor, 
+                categoria_id,
+                produto_imagem:uploadFile.Location
+    
+            }).where({ id }).returning('*')
+            return res.status(200).json(queryEditProduct[0])
+
+        }
+
+
+        const queryEdit = await knex('produtos').update({ 
+            descricao, 
+            quantidade_estoque, 
+            valor, 
+            categoria_id
+
+        }).where({ id }).returning('*')
 
         return res.status(200).json(queryEdit[0])
 

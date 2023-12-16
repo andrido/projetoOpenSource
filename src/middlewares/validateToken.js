@@ -19,7 +19,7 @@ const validateToken = async (req, res, next) => {
         next()
     } catch (error) {
         console.log(error)
-        return res.status(401).json({ mensagem: 'Para acessar este recurso um token de autenticação válido deve ser enviado.' })
+        return res.status(500).json({ mensagem: 'Erro interno do servidor' })
     }
 }
 
