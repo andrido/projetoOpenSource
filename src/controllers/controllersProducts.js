@@ -5,9 +5,9 @@ const endpoint = new aws.Endpoint(process.env.ENDPOINT)
 
 const s3 = new aws.S3({
     endpoint,
-    credentials:{
-        accessKeyId:process.env.KEY_ID,
-        secretAccessKey:process.env.APP_KEY,
+    credentials: {
+        accessKeyId: process.env.KEY_ID,
+        secretAccessKey: process.env.APP_KEY,
 
     },
 })
@@ -18,21 +18,21 @@ const productRegister = async (req, res) => {
 
     try {
 
-        if(file){
+        if (file) {
             const uploadFile = await s3.upload({
                 Bucket: process.env.BACKBLAZE_BUCKET,
                 Key: `imagens/${file.originalname}`,
                 Body: file.buffer,
                 ContentType: file.mimetype
             }).promise()
-            
-            const queryInsertProduct = await knex('produtos').insert({ 
-                descricao, 
-                quantidade_estoque, 
-                valor, 
+
+            const queryInsertProduct = await knex('produtos').insert({
+                descricao,
+                quantidade_estoque,
+                valor,
                 categoria_id,
-                produto_imagem:uploadFile.Location
-                
+                produto_imagem: uploadFile.Location
+
             }).returning('*')
             return res.status(200).json(queryInsertProduct[0])
 
@@ -55,7 +55,7 @@ const productRegister = async (req, res) => {
             quantidade_estoque,
             valor,
             categoria_id,
-            
+
         }).returning('*')
 
         console.log(req.file);
@@ -76,50 +76,50 @@ const editProduct = async (req, res) => {
 
     try {
         const validateID = await knex('produtos').where({ id })
-        
+
         if (!validateID) {
             return res.status(400).json({ message: `O ID: ${id} não existe` })
         }
-        
+
         const existentCategory = await knex('categorias').where({ id: categoria_id }).returning('*')
-        
+
         if (!existentCategory) {
             return res.status(404).json({ message: `Não foi possível encontrar categoria com esse ID` })
         }
 
-        if(file){
-            
-            const deleteImage = await knex('produtos').select('produto_imagem').where({id})
-            
+        if (file) {
+
+            const deleteImage = await knex('produtos').select('produto_imagem').where({ id })
+
             const editKey = deleteImage[0].produto_imagem.split('/')[5]
             await s3.deleteObject({
                 Bucket: process.env.BACKBLAZE_BUCKET,
                 Key: `imagens/${editKey}`
             })
-            
+
             const uploadFile = await s3.upload({
                 Bucket: process.env.BACKBLAZE_BUCKET,
                 Key: `imagens/${file.originalname}`,
                 Body: file.buffer,
                 ContentType: file.mimetype
             }).promise()
-            
-            const queryEditProduct = await knex('produtos').update({ 
-                descricao, 
-                quantidade_estoque, 
-                valor, 
+
+            const queryEditProduct = await knex('produtos').update({
+                descricao,
+                quantidade_estoque,
+                valor,
                 categoria_id,
-                produto_imagem:uploadFile.Location
-    
+                produto_imagem: uploadFile.Location
+
             }).where({ id }).returning('*')
             return res.status(200).json(queryEditProduct[0])
         }
 
 
-        const queryEdit = await knex('produtos').update({ 
-            descricao, 
-            quantidade_estoque, 
-            valor, 
+        const queryEdit = await knex('produtos').update({
+            descricao,
+            quantidade_estoque,
+            valor,
             categoria_id
 
         }).where({ id }).returning('*')
@@ -192,21 +192,31 @@ const deleteProduct = async (req, res) => {
     try {
         const product = await knex('produtos').where({ id }).first()
 
-        if(!product) {
+        if (!product) {
             return res.status(404).json({ message: `Produto com id ${id} não encontrado.` })
         }
 
         const findProduct = await knex('pedido_produtos').where('produto_id', '=', id).first()
 
-        if(!findProduct) {
-            return res.status(404).json({ message: 'Nenhum pedido com o produto foi encontrado.'})
+        if (findProduct) {
+            return res.status(404).json({ message: 'Não é possível deletar um produto que está cadastrado em um ou mais pedidos.' })
         }
 
+        const { produto_imagem } = await knex('produtos').where({ id }).first().returning('produto_imagem')
+        const path = String(produto_imagem)
+
         const removeProduct = await knex('produtos').where({ id }).delete()
+
+        const removeProductImage = await s3.deleteObject({
+            Bucket: process.env.BACKBLAZE_BUCKET,
+            Key: path
+        }).promise()
 
         return res.status(200).json({ message: 'Produto excluido!' })
 
     } catch (error) {
+        console.log(error)
+
         return res.status(500).json({ message: 'Erro interno no servidor!' });
     }
 }
