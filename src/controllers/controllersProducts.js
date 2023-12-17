@@ -75,10 +75,7 @@ const editProduct = async (req, res) => {
 
 
     try {
-
-        
         const validateID = await knex('produtos').where({ id })
-        
         
         if (!validateID) {
             return res.status(400).json({ message: `O ID: ${id} não existe` })
@@ -116,7 +113,6 @@ const editProduct = async (req, res) => {
     
             }).where({ id }).returning('*')
             return res.status(200).json(queryEditProduct[0])
-
         }
 
 
@@ -196,8 +192,14 @@ const deleteProduct = async (req, res) => {
     try {
         const product = await knex('produtos').where({ id }).first()
 
-        if (!product) {
-            return res.status(400).json({ message: `Produto com id ${id} não encontrado` })
+        if(!product) {
+            return res.status(404).json({ message: `Produto com id ${id} não encontrado.` })
+        }
+
+        const findProduct = await knex('pedido_produtos').where('produto_id', '=', id).first()
+
+        if(!findProduct) {
+            return res.status(404).json({ message: 'Nenhum pedido com o produto foi encontrado.'})
         }
 
         const removeProduct = await knex('produtos').where({ id }).delete()
@@ -205,7 +207,7 @@ const deleteProduct = async (req, res) => {
         return res.status(200).json({ message: 'Produto excluido!' })
 
     } catch (error) {
-        return res.status(500).json({ message: 'Erro interno no servidor' });
+        return res.status(500).json({ message: 'Erro interno no servidor!' });
     }
 }
 
