@@ -1,37 +1,27 @@
 const knex = require('../database/connection');
-const aws = require('aws-sdk')
+const { uploadFile } = require('../service/storage')
 
-const endpoint = new aws.Endpoint(process.env.ENDPOINT)
 
-const s3 = new aws.S3({
-    endpoint,
-    credentials: {
-        accessKeyId: process.env.KEY_ID,
-        secretAccessKey: process.env.APP_KEY,
-
-    },
-})
 
 const productRegister = async (req, res) => {
     const { descricao, quantidade_estoque, valor, categoria_id } = req.body
     const { file } = req
 
     try {
-
         if (file) {
-            const uploadFile = await s3.upload({
-                Bucket: process.env.BACKBLAZE_BUCKET,
-                Key: `imagens/${file.originalname}`,
-                Body: file.buffer,
-                ContentType: file.mimetype
-            }).promise()
+
+            const uploadResult = await uploadFile(
+                `imagens/${file.originalname}`,
+                file.buffer,
+                file.mimetype
+            )
 
             const queryInsertProduct = await knex('produtos').insert({
                 descricao,
                 quantidade_estoque,
                 valor,
                 categoria_id,
-                produto_imagem: uploadFile.Location
+                produto_imagem: uploadResult.url
 
             }).returning('*')
             return res.status(200).json(queryInsertProduct[0])
