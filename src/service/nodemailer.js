@@ -5,10 +5,8 @@ const transporter = nodemailer.createTransport({
     port: process.env.EMAIL_PORT,
     auth: {
         user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
+        pass: process.env.EMAIL_PASS
     }
-
-
 })
 
 const enviarEmail = (to, subject, body) => {
@@ -17,7 +15,6 @@ const enviarEmail = (to, subject, body) => {
         to,
         subject,
         text: body
-
     })
 }
 
