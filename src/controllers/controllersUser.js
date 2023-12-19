@@ -18,7 +18,7 @@ const registerUser = async (req, res) => {
             nome,
             email,
             senha: passwordEncrypted,
-        }).returning(['nome', 'email'])
+        }).returning(['id', 'nome', 'email'])
 
         return res.status(201).json(register[0])
     } catch (error) {
@@ -30,22 +30,24 @@ const login = async (req, res) => {
     const { email, senha } = req.body
 
     try {
-        const ExistentUser = await knex('usuarios').where({ email: email }).returning('*')
-        if (ExistentUser.length === 0) {
+        const ExistentUser = await knex('usuarios').where({ email: email }).first()
+
+        if(!ExistentUser) {
             return res.status(400).json({ message: "E-mail ou senha inválida" })
         }
 
-        const { senha: passwordUser, ...user } = ExistentUser[0]
-
-        const correctPassword = await bcrypt.compare(senha, passwordUser)
-
+        const correctPassword = await bcrypt.compare(senha, ExistentUser.senha)
+        
         if (!correctPassword) {
             return res.status(400).json({ message: "E-mail ou senha inválida" })
         }
 
-        const token = jwt.sign({ sub: user.id }, process.env.JWT_PASS, { expiresIn: '8h' })
+        const token = jwt.sign({ sub: ExistentUser.id }, process.env.JWT_PASS, { expiresIn: '8h' })
+
+        const { senha: _, ...user } = ExistentUser
+
         return res.status(200).json({
-            user,
+            user: user,
             token
         })
 
@@ -72,7 +74,6 @@ const editUser = async (req, res) => {
     try {
         const passwordEncrypted = await bcrypt.hash(senha, 10)
         const validateEmail = await knex('usuarios').select('*').where({ email }).first()
-        console.log(validateEmail);
 
         if (validateEmail) {
             return res.status(400).json({ message: 'Já existe usuário cadastrado com o e-mail informado.' });

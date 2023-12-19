@@ -1,11 +1,10 @@
 const joi = require('joi');
 
 const schemaClients = joi.object({
-    nome: joi.string().regex(/^\w+$/).required().messages({
+    nome: joi.string().required().messages({
         'any.required': 'O campo nome é obrigatório',
         'string.empty': 'O campo nome é obrigatório',
-        'string.base': 'O campo nome precisa ser do tipo string',
-        'string.pattern.base': 'O campo nome não pode ter espaço em branco'
+        'string.base': 'O campo nome precisa ser do tipo string'
     }),
     email: joi.string().email().required().messages({
         'any.required': 'O campo email é obrigatório',

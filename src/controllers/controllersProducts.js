@@ -1,19 +1,35 @@
 const knex = require('../database/connection');
+const storage = require('../service/storage')
+
 
 const productRegister = async (req, res) => {
     const { descricao, quantidade_estoque, valor, categoria_id } = req.body
+    const { file } = req
 
     try {
-        const productRepetition = await knex('produtos').where({ descricao: descricao }).returning('*')
+        const productRepetition = await knex('produtos').where({ descricao }).count().returning('*')
 
-        if (productRepetition.length !== 0) {
+        if (productRepetition[0].count > 0) {
             return res.status(404).json({ message: `O produto ${descricao} já existe no registro` })
         }
 
-        const existentCategory = await knex('categorias').where({ id: categoria_id }).returning('*')
+        const existentCategory = await knex('categorias').where({ id: categoria_id }).count().returning('*')
+        if (Number(existentCategory[0].count) === 0) {
+            return res.status(400).json({ message: `Não foi possível encontrar categoria com o ID:${categoria_id}` })
+        }
 
-        if (existentCategory.length !== 1) {
-            return res.status(404).json({ message: `Não foi possível encontrar categoria com o ID:${id}` })
+        if (file) {
+            const uploadResult = await storage.uploadFile(file)
+
+            const queryInsertProduct = await knex('produtos').insert({
+                descricao,
+                quantidade_estoque,
+                valor,
+                categoria_id,
+                produto_imagem: uploadResult.Location
+
+            }).returning('*')
+            return res.status(201).json(queryInsertProduct[0])
         }
 
         const product = await knex('produtos').insert({
@@ -22,6 +38,7 @@ const productRegister = async (req, res) => {
             valor,
             categoria_id
         }).returning('*')
+
 
         return res.status(201).json(product[0])
 
@@ -34,35 +51,80 @@ const editProduct = async (req, res) => {
 
     const { id } = req.params
     const { descricao, quantidade_estoque, valor, categoria_id } = req.body
+    const { file } = req
+
 
     try {
+        const validateID = await knex('produtos').where({ id }).count()
 
-        const validateID = await knex('produtos').where({ id })
-
-
-        if (validateID.length === 0) {
-            return res.status(400).json({ message: `O ID: ${id} não existe` })
+        if (validateID[0].count === 0) {
+            return res.status(404).json({ message: `O ID: ${id} não existe` })
         }
 
-        const existentCategory = await knex('categorias').where({ id: categoria_id }).returning('*')
+        const existentCategory = await knex('categorias').where({ id: categoria_id }).count().returning('*')
 
-        if (existentCategory.length === 0) {
+        if (existentCategory[0].count === 0) {
             return res.status(404).json({ message: `Não foi possível encontrar categoria com esse ID` })
         }
 
-        const queryEdit = await knex('produtos').update({ descricao, quantidade_estoque, valor, categoria_id }).where({ id }).returning('*')
+        const productRepetition = await knex('produtos').where({ descricao }).count().returning('*')
+
+        if (productRepetition[0].count > 0) {
+            return res.status(404).json({ message: `O produto ${descricao} já existe no registro` })
+        }
+
+        if (file) {
+            const deleteImage = await knex('produtos').select('produto_imagem').where({ id })
+            const pathIsNull = await knex('produtos').select('produto_imagem').where('produto_imagem', null).andWhere({ id });
+        
+            if (pathIsNull) {
+                const uploadResult = await storage.uploadFile(file)
+
+                const queryEditProduct = await knex('produtos').update({
+                    descricao,
+                    quantidade_estoque,
+                    valor,
+                    categoria_id,
+                    produto_imagem: uploadResult.Location
+                }).where({ id }).returning('*')
+
+                return res.status(200).json(queryEditProduct[0])
+            } 
+
+            await storage.deleteFile(deleteImage)
+            const uploadResult = await storage.uploadFile(file)
+
+            const queryEditProduct = await knex('produtos').update({
+                    descricao,
+                    quantidade_estoque,
+                    valor,
+                    categoria_id,
+                    produto_imagem: uploadResult.Location
+            }).where({ id }).returning('*')
+
+            return res.status(200).json(queryEditProduct[0])
+        }
+
+        const queryEdit = await knex('produtos').update({
+            descricao,
+            quantidade_estoque,
+            valor,
+            categoria_id,
+            produto_imagem: null
+
+        }).where({ id }).returning('*')
 
         return res.status(200).json(queryEdit[0])
 
     } catch (error) {
         return res.status(500).json({ message: error.message })
-
     }
 }
 
 const productListing = async (req, res) => {
     const { filtro } = req.query;
     try {
+
         const queryListing = await knex('produtos').returning('*')
 
         if (queryListing.length === 0) {
@@ -104,10 +166,10 @@ const detailProduct = async (req, res) => {
         const product = await knex('produtos').where({ id }).first();
 
         if (!product) {
-            return res.status(400).json({ message: `Produto com id ${id} não encontrado` })
+            return res.status(404).json({ message: `Produto com id ${id} não encontrado` })
         }
 
-        res.status(200).json(product)
+        return res.status(200).json(product)
     } catch (error) {
         return res.status(500).json({ message: 'Erro interno no servidor' });
     }
@@ -121,15 +183,31 @@ const deleteProduct = async (req, res) => {
         const product = await knex('produtos').where({ id }).first()
 
         if (!product) {
-            return res.status(400).json({ message: `Produto com id ${id} não encontrado` })
+            return res.status(404).json({ message: `Produto com id ${id} não encontrado.` })
         }
 
-        const removeProduct = await knex('produtos').where({ id }).delete()
+        const findProduct = await knex('pedido_produtos').where('produto_id', '=', id).first()
 
-        return res.status(200).json({ message: 'Produto excluido!' })
+        if (findProduct) {
+            return res.status(404).json({ message: 'Não é possível deletar um produto que está cadastrado em um ou mais pedidos.' })
+        }
 
+        const queryImageNull = await knex('produtos').select('produto_imagem').where('produto_imagem', null).andWhere({ id })
+
+        if(queryImageNull){
+            await knex('produtos').where({ id }).del()
+            return res.status(204).json()
+        }
+
+        const deleteImage = await knex('produtos').select('produto_imagem').where({ id })
+
+        await storage.deleteFile(deleteImage)
+        
+        await knex('produtos').where({ id }).del()
+
+        return res.status(204).json()
     } catch (error) {
-        return res.status(500).json({ message: 'Erro interno no servidor' });
+        return res.status(500).json({ message: 'Erro interno no servidor!' });
     }
 }
 
