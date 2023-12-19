@@ -1,4 +1,5 @@
 const aws = require('aws-sdk')
+const { PassThrough } = require('nodemailer/lib/xoauth2')
 
 const endpoint = new aws.Endpoint(process.env.ENDPOINT)
 
@@ -11,23 +12,27 @@ const s3 = new aws.S3({
     },
 })
 
-const uploadFile = async (path, buffer, mimetype) => {
-    const file = await s3.upload({
+const uploadFile = async (file) => {
+    const image = await s3.upload({
         Bucket: process.env.BACKBLAZE_BUCKET,
-        Key: path,
-        Body: buffer,
-        ContentType: mimetype
+        Key: `imagens/${file.originalname}`,
+        Body: file.buffer,
+        ContentType: file.mimetype
     }).promise()
+    return image
+}
 
-    return {
-        url: file.Location,
-        path: file.Key
-
-    }
-
+const deleteFile = async (path) => {
+    const B = await s3.deleteObject({
+        Bucket: process.env.BACKBLAZE_BUCKET,
+        Key: `imagens/${path[0].produto_imagem.split('/')[5]}`,
+    }).promise()
+    console.log(B[0])
 
 }
 
-module.exports = { uploadFile }
 
+
+
+module.exports = { uploadFile, deleteFile }
 
